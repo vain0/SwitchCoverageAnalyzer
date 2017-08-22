@@ -93,16 +93,24 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixWithoutDefaultCase\Diagnostic\Results.json" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixWithDefaultCase\Expected0\Testee.cs" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixWithDefaultCase\Source\Testee.cs" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\NoReportCase\Source\Testee.cs" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixWithoutDefaultCase\Expected0\Testee.cs" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixWithoutDefaultCase\Source\Testee.cs" />
+    <Compile Include="SwitchOnEnumCoverageAnalysingTests.cs" />
     <Compile Include="Verifiers\CodeFixVerifier.cs" />
     <Compile Include="Verifiers\ConventionCodeFixVerifier.cs" />
     <Compile Include="Verifiers\DiagnosticVerifier.cs" />
     <Compile Include="Helpers\CodeFixVerifier.Helper.cs" />
     <Compile Include="Helpers\DiagnosticResult.cs" />
     <Compile Include="Helpers\DiagnosticVerifier.Helper.cs" />
-    <Compile Include="UnitTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixWithDefaultCase\Diagnostic\Results.json" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\NoReportCase\Diagnostic\Results.json" />
     <None Include="DataSource\result-schema-v1.json" />
     <None Include="DataSource\result-schema-v2.json" />
     <None Include="packages.config" />
@@ -112,6 +120,9 @@
       <Project>{8F7ADEE3-0A58-4366-9345-3ECCA0ECC4DF}</Project>
       <Name>SwitchCoverageAnalyzer</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
