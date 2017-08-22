@@ -16,8 +16,8 @@ namespace SwitchCoverageAnalyzer.SwitchOnEnumCoverageAnalysing
         public static DiagnosticDescriptor Rule { get; } =
             new DiagnosticDescriptor(
                 "ScaSwitchOnEnumCoverage",
-                "Some enume cases are missing",
-                "Add cases: {0}",
+                "Some enum members are missing",
+                "Missing enum members: {0}.",
                 "Refactoring",
                 DiagnosticSeverity.Warning,
                 isEnabledByDefault: true
@@ -37,13 +37,13 @@ namespace SwitchCoverageAnalyzer.SwitchOnEnumCoverageAnalysing
             var semanticModel = context.SemanticModel;
 
             if (!SwitchAnalysis.TryAnalyze(switchStatement, semanticModel, out var analysis)) return;
-            if (analysis.MissingCases.IsEmpty) return;
+            if (analysis.IsAllFound) return;
 
             context.ReportDiagnostic(
                 Diagnostic.Create(
                     Rule,
                     switchStatement.SwitchKeyword.GetLocation(),
-                    string.Join(", ",  analysis.MissingCases.Select(c => $"'{c.Name}'"))
+                    string.Join(", ",  analysis.MissingEnumMembers.Select(c => $"'{c.Name}'"))
                 ));
         }
     }

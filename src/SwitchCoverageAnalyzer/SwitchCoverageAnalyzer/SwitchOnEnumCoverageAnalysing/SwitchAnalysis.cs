@@ -12,36 +12,55 @@ namespace SwitchCoverageAnalyzer.SwitchOnEnumCoverageAnalysing
 {
     public sealed class SwitchAnalysis
     {
+        public struct EnumMember
+        {
+            public ISymbol Symbol { get; }
+
+            /// <summary>
+            /// Determines if this member appeared as case label.
+            /// </summary>
+            public bool IsFound { get; }
+
+            public EnumMember(ISymbol symbol, bool isFound)
+            {
+                Symbol = symbol;
+                IsFound = isFound;
+            }
+        }
+
         SwitchStatementSyntax SwitchStatement { get; }
         SemanticModel SemanticModel { get; }
         SwitchSectionSyntax DefaultSectionOrNull { get; }
         ITypeSymbol EnumTypeSymbol { get; }
-        ImmutableArray<ISymbol> AllCases { get; }
-        public ImmutableArray<ISymbol> MissingCases { get; }
+        ImmutableArray<EnumMember> EnumMembers { get; }
 
-        public SwitchAnalysis(SwitchStatementSyntax switchStatement, SemanticModel semanticModel, SwitchSectionSyntax defaultSectionOrNull, ITypeSymbol enumTypeSymbol, ImmutableArray<ISymbol> allCases, ImmutableArray<ISymbol> missingCases)
+        public bool IsAllFound =>
+            EnumMembers.All(em => em.IsFound);
+
+        public IEnumerable<ISymbol> MissingEnumMembers =>
+            EnumMembers.Where(em => !em.IsFound).Select(em => em.Symbol);
+
+        public SwitchAnalysis(SwitchStatementSyntax switchStatement, SemanticModel semanticModel, SwitchSectionSyntax defaultSectionOrNull, ITypeSymbol enumTypeSymbol, ImmutableArray<EnumMember> enumMembers)
         {
             SwitchStatement = switchStatement;
             SemanticModel = semanticModel;
             DefaultSectionOrNull = defaultSectionOrNull;
             EnumTypeSymbol = enumTypeSymbol;
-            AllCases = allCases;
-            MissingCases = missingCases;
+            EnumMembers = enumMembers;
         }
 
         public SwitchStatementSyntax Fix()
         {
             var additionalLabels =
-                MissingCases.Select(caseSymbol =>
+                MissingEnumMembers.Select(symbol =>
                     SyntaxFactory.CaseSwitchLabel(
                         SyntaxFactory.ParseName(
-                            caseSymbol.ToMinimalDisplayString(
+                            symbol.ToMinimalDisplayString(
                                 SemanticModel,
                                 SwitchStatement.Span.Start
                             )),
                         SyntaxFactory.Token(SyntaxKind.ColonToken)
-                    ))
-                .ToArray();
+                    ));
 
             if (DefaultSectionOrNull != null)
             {
@@ -69,22 +88,10 @@ namespace SwitchCoverageAnalyzer.SwitchOnEnumCoverageAnalysing
             }
         }
 
-        public static bool TryAnalyze(SwitchStatementSyntax switchStatement, SemanticModel semanticModel, out SwitchAnalysis analysis)
+        static void AnalyzeSections(SwitchStatementSyntax switchStatement, SemanticModel semanticModel, out HashSet<ISymbol> foundEnumMembers, out SwitchSectionSyntax defaultSectionOrNull)
         {
-            analysis = default(SwitchAnalysis);
-
-            if (switchStatement.Expression == null) return false;
-
-            var typeSymbol = semanticModel.GetTypeInfo(switchStatement.Expression).Type;
-            if (typeSymbol == null || typeSymbol.TypeKind != TypeKind.Enum) return false;
-
-            var cases =
-                typeSymbol.GetMembers()
-                .Where(m => m.Kind == SymbolKind.Field)
-                .ToImmutableArray();
-
-            var foundCases = new HashSet<ISymbol>();
-            var defaultSectionOrNull = default(SwitchSectionSyntax);
+            foundEnumMembers = new HashSet<ISymbol>();
+            defaultSectionOrNull = null;
 
             foreach (var section in switchStatement.Sections)
             {
@@ -97,7 +104,7 @@ namespace SwitchCoverageAnalyzer.SwitchOnEnumCoverageAnalysing
                         var symbol = semanticModel.GetSymbolInfo(caseLabel.Value).Symbol;
                         if (symbol == null) continue;
 
-                        foundCases.Add(symbol);
+                        foundEnumMembers.Add(symbol);
                     }
                     else if (
                         label.Keyword.IsKind(SyntaxKind.DefaultKeyword)
@@ -108,8 +115,25 @@ namespace SwitchCoverageAnalyzer.SwitchOnEnumCoverageAnalysing
                     }
                 }
             }
+        }
 
-            var unfoundCases = cases.Where(c => !foundCases.Contains(c)).ToImmutableArray();
+        public static bool TryAnalyze(SwitchStatementSyntax switchStatement, SemanticModel semanticModel, out SwitchAnalysis analysis)
+        {
+            analysis = default(SwitchAnalysis);
+
+            if (switchStatement.Expression == null) return false;
+
+            var typeSymbol = semanticModel.GetTypeInfo(switchStatement.Expression).Type;
+            if (typeSymbol == null || typeSymbol.TypeKind != TypeKind.Enum) return false;
+
+            AnalyzeSections(switchStatement, semanticModel, out var foundEnumMembers, out var defaultSectionOrNull);
+
+            var enumMembers =
+                typeSymbol
+                .GetMembers()
+                .Where(symbol => symbol.Kind == SymbolKind.Field)
+                .Select(symbol => new EnumMember(symbol, foundEnumMembers.Contains(symbol)))
+                .ToImmutableArray();
 
             analysis =
                 new SwitchAnalysis(
@@ -117,8 +141,7 @@ namespace SwitchCoverageAnalyzer.SwitchOnEnumCoverageAnalysing
                     semanticModel,
                     defaultSectionOrNull,
                     typeSymbol,
-                    cases,
-                    unfoundCases
+                    enumMembers
                 );
             return true;
         }

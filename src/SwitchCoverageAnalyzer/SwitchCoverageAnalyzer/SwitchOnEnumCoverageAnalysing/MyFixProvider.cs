@@ -55,7 +55,7 @@ namespace SwitchCoverageAnalyzer.SwitchOnEnumCoverageAnalysing
             if (semanticModel == null) return;
 
             if (!SwitchAnalysis.TryAnalyze(switchStatement, semanticModel, out var analysis)) return;
-            if (analysis.MissingCases.IsEmpty) return;
+            if (analysis.IsAllFound) return;
 
             context.RegisterCodeFix(
                 CodeAction.Create(
