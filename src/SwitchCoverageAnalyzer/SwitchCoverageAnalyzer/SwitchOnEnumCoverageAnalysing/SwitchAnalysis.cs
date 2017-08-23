@@ -49,42 +49,150 @@ namespace SwitchCoverageAnalyzer.SwitchOnEnumCoverageAnalysing
             EnumMembers = enumMembers;
         }
 
+        CaseSwitchLabelSyntax CreateCaseSwitchLabel(ISymbol symbol)
+        {
+            return
+                SyntaxFactory.CaseSwitchLabel(
+                    SyntaxFactory.ParseName(
+                        symbol.ToMinimalDisplayString(
+                            SemanticModel,
+                            SwitchStatement.Span.Start
+                        )),
+                    SyntaxFactory.Token(SyntaxKind.ColonToken)
+                );
+        }
+
+        SwitchSectionSyntax CreateSwitchSection(IEnumerable<ISymbol> symbols)
+        {
+            return
+                SyntaxFactory.SwitchSection(
+                    SyntaxFactory.List<SwitchLabelSyntax>(symbols.Select(CreateCaseSwitchLabel)),
+                    SyntaxFactory.List<StatementSyntax>().Add(
+                        SyntaxFactory.ThrowStatement(
+                            SyntaxFactory.ObjectCreationExpression(
+                                SyntaxFactory.ParseTypeName(nameof(NotImplementedException)),
+                                SyntaxFactory.ArgumentList(),
+                                initializer: null
+                            ))));
+        }
+
+        /// <summary>
+        /// Updates the switch statement by inserting new section
+        /// for each missing enum member at appropriate position
+        /// if its sections except for default one are sorted in ascending order.
+        /// </summary>
+        bool TryInsertSectionsInAscendingOrder(out SwitchStatementSyntax result)
+        {
+            // Tries to find the enum member which appears firstly
+            // as case label in the specified section.
+            bool TryFirstEnumMember(SwitchSectionSyntax section, out ISymbol symbol)
+            {
+                foreach (var label in section.Labels)
+                {
+                    if (!(label is CaseSwitchLabelSyntax caseLabel)) continue;
+                    if (caseLabel.Value == null) continue;
+
+                    symbol = SemanticModel.GetSymbolInfo(caseLabel.Value).Symbol;
+                    if (symbol == null) continue;
+                    return true;
+                }
+
+                symbol = default;
+                return false;
+            }
+
+            var sections = new List<SwitchSectionSyntax>(SwitchStatement.Sections.Count);
+            var offset = 0;
+
+            // Tries to find the enum member represented by the specified symbol
+            // from the rest of member list and return its index.
+            bool TryIndexOfEnumMember(ISymbol symbol, out int index)
+            {
+                for (var i = offset; i < EnumMembers.Length; i++)
+                {
+                    if (EnumMembers[i].Symbol == symbol)
+                    {
+                        index = i;
+                        return true;
+                    }
+                }
+
+                index = default;
+                return false;
+            }
+
+            // Inserts new section for each enum member in the specified range
+            // which isn't used as case label.
+            void AddSections(int index, int endIndex)
+            {
+                for (var i = index; i < endIndex; i++)
+                {
+                    var em = EnumMembers[i];
+                    if (em.IsFound) continue;
+                    sections.Add(CreateSwitchSection(new[] { em.Symbol }));
+                }
+            }
+
+            for (var si = 0; si < SwitchStatement.Sections.Count; si++)
+            {
+                var section = SwitchStatement.Sections[si];
+
+                if (section == DefaultSectionOrNull)
+                {
+                    if (si == SwitchStatement.Sections.Count - 1)
+                    {
+                        // It's likely the final default section.
+                        // Insert rest of new sections before it.
+                        AddSections(offset, EnumMembers.Length);
+                        offset = EnumMembers.Length;
+                    }
+                }
+                else if (TryFirstEnumMember(section, out var firstEnumMember))
+                {
+                    if (!TryIndexOfEnumMember(firstEnumMember, out var mi))
+                    {
+                        result = default;
+                        return false;
+                    }
+
+                    AddSections(offset, mi);
+                    offset = mi + 1;
+                }
+
+                sections.Add(section);
+            }
+
+            AddSections(offset, EnumMembers.Length);
+
+            result = SwitchStatement.WithSections(SyntaxFactory.List(sections));
+            return true;
+        }
+
+        SwitchStatementSyntax AddCasesToDefaultSection(SwitchSectionSyntax defaultSection)
+        {
+            return
+                SwitchStatement.ReplaceNode(
+                    defaultSection,
+                    defaultSection.WithLabels(
+                        SyntaxFactory.List(
+                            MissingEnumMembers.Select(CreateCaseSwitchLabel)
+                            .Concat(defaultSection.Labels)
+                        )));
+        }
+
         public SwitchStatementSyntax Fix()
         {
-            var additionalLabels =
-                MissingEnumMembers.Select(symbol =>
-                    SyntaxFactory.CaseSwitchLabel(
-                        SyntaxFactory.ParseName(
-                            symbol.ToMinimalDisplayString(
-                                SemanticModel,
-                                SwitchStatement.Span.Start
-                            )),
-                        SyntaxFactory.Token(SyntaxKind.ColonToken)
-                    ));
-
-            if (DefaultSectionOrNull != null)
+            if (TryInsertSectionsInAscendingOrder(out var result))
             {
-                var section = DefaultSectionOrNull;
-                return
-                    SwitchStatement.ReplaceNode(
-                        section,
-                        section.WithLabels(
-                            SyntaxFactory.List(additionalLabels.Concat(section.Labels))
-                        ));
+                return result;
+            }
+            else if (DefaultSectionOrNull != null)
+            {
+                return AddCasesToDefaultSection(DefaultSectionOrNull);
             }
             else
             {
-                var section =
-                    SyntaxFactory.SwitchSection(
-                        SyntaxFactory.List<SwitchLabelSyntax>(additionalLabels),
-                        SyntaxFactory.List<StatementSyntax>().Add(
-                            SyntaxFactory.ThrowStatement(
-                                SyntaxFactory.ObjectCreationExpression(
-                                    SyntaxFactory.ParseTypeName(nameof(NotImplementedException)),
-                                    SyntaxFactory.ArgumentList(),
-                                    initializer: null
-                                ))));
-                return SwitchStatement.AddSections(section);
+                return SwitchStatement.AddSections(CreateSwitchSection(MissingEnumMembers));
             }
         }
 
@@ -119,7 +227,7 @@ namespace SwitchCoverageAnalyzer.SwitchOnEnumCoverageAnalysing
 
         public static bool TryAnalyze(SwitchStatementSyntax switchStatement, SemanticModel semanticModel, out SwitchAnalysis analysis)
         {
-            analysis = default(SwitchAnalysis);
+            analysis = default;
 
             if (switchStatement.Expression == null) return false;
 
