@@ -98,12 +98,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixWithoutDefaultCase\Diagnostic\Results.json" />
-    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixWithDefaultCase\Expected0\Testee.cs" />
-    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixWithDefaultCase\Source\Testee.cs" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixSortedCase\Diagnostic\Results.json" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixUnsortedWithoutDefaultCase\Diagnostic\Results.json" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixUnsortedWithDefaultCase\Expected0\Testee.cs" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixUnsortedWithDefaultCase\Source\Testee.cs" />
     <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\NoReportCase\Source\Testee.cs" />
-    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixWithoutDefaultCase\Expected0\Testee.cs" />
-    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixWithoutDefaultCase\Source\Testee.cs" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixUnsortedWithoutDefaultCase\Expected0\Testee.cs" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixUnsortedWithoutDefaultCase\Source\Testee.cs" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixSortedCase\Expected0\Testee.cs" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixSortedCase\Source\Testee.cs" />
     <Compile Include="SwitchOnEnumCoverageAnalysingTests.cs" />
     <Compile Include="Verifiers\CodeFixVerifier.cs" />
     <Compile Include="Verifiers\ConventionCodeFixVerifier.cs" />
@@ -114,7 +117,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixWithDefaultCase\Diagnostic\Results.json" />
+    <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\FixUnsortedWithDefaultCase\Diagnostic\Results.json" />
     <None Include="DataSource\SwitchOnEnumCoverageAnalysingTests\NoReportCase\Diagnostic\Results.json" />
     <None Include="DataSource\result-schema-v1.json" />
     <None Include="DataSource\result-schema-v2.json" />

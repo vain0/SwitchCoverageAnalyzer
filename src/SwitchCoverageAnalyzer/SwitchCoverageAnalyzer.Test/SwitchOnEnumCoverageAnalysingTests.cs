@@ -25,10 +25,13 @@ namespace SwitchCoverageAnalyzer.Test
         }
 
         [TestMethod]
-        public void FixWithDefaultCase() => VerifyCSharpByConvention();
+        public void FixSortedCase() => VerifyCSharpByConvention();
 
         [TestMethod]
-        public void FixWithoutDefaultCase() => VerifyCSharpByConvention();
+        public void FixUnsortedWithDefaultCase() => VerifyCSharpByConvention();
+
+        [TestMethod]
+        public void FixUnsortedWithoutDefaultCase() => VerifyCSharpByConvention();
 
         [TestMethod]
         public void NoReportCase() => VerifyCSharpByConvention();

@@ -9,18 +9,22 @@ public sealed class Testee
 {
     public void Method(DayOfWeek wday)
     {
-        // Tuesday, Wednesday and Saturday are missing.
+        // Tuesday and Wednesday are missing.
+        // Unsorted: Friday appears before Thursday.
         switch (wday)
         {
             case DayOfWeek.Sunday:
             case DayOfWeek.Monday:
+            case DayOfWeek.Saturday:
                 Debug.WriteLine("Sunday or Monday.");
+                break;
+            case DayOfWeek.Friday:
+                Debug.WriteLine("Friday.");
                 break;
             case DayOfWeek.Thursday:
                 Debug.WriteLine("Thursday.");
                 break;
-            case DayOfWeek.Friday:
-                Debug.WriteLine("Friday.");
+            default:
                 break;
         }
     }

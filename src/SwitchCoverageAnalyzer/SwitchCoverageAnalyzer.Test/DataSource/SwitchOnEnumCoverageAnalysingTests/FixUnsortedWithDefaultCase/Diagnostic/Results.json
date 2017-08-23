@@ -2,9 +2,9 @@
   {
     "id": "ScaSwitchOnEnumCoverage",
     "sevirity": "Warning",
-    "line": 13,
+    "line": 14,
     "column": 9,
     "path": "Testee.cs",
-    "message-args": [ "'Tuesday', 'Wednesday', 'Saturday'" ]
+    "message-args": [ "'Tuesday', 'Wednesday'" ]
   }
 ]
