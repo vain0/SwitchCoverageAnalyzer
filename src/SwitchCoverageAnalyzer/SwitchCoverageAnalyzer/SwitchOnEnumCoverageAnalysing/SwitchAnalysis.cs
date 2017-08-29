@@ -239,7 +239,9 @@ namespace SwitchCoverageAnalyzer.SwitchOnEnumCoverageAnalysing
             var enumMembers =
                 typeSymbol
                 .GetMembers()
-                .Where(symbol => symbol.Kind == SymbolKind.Field)
+                .OfType<IFieldSymbol>()
+                .Where(symbol => symbol.IsConst)
+                .OrderBy(symbol => symbol.ConstantValue)
                 .Select(symbol => new EnumMember(symbol, foundEnumMembers.Contains(symbol)))
                 .ToImmutableArray();
 
