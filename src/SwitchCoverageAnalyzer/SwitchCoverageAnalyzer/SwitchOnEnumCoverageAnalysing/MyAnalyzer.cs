@@ -11,7 +11,8 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace SwitchCoverageAnalyzer.SwitchOnEnumCoverageAnalysing
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class MyAnalyzer : DiagnosticAnalyzer
+    public sealed class MyAnalyzer
+        : DiagnosticAnalyzer
     {
         public static DiagnosticDescriptor Rule { get; } =
             new DiagnosticDescriptor(

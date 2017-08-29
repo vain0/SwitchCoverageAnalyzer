@@ -16,7 +16,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace SwitchCoverageAnalyzer.SwitchOnEnumCoverageAnalysing
 {
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(MyFixProvider)), Shared]
-    public class MyFixProvider
+    public sealed class MyFixProvider
         : CodeFixProvider
     {
         static readonly ImmutableArray<string> s_fixableDiagnosticIds =
